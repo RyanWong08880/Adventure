@@ -32,6 +32,8 @@ public class Game {
 
   private final Player player = new Player(compSciRoom);
   private final List<NPC> npcs = new ArrayList<>();
+  private final Scanner scanner = new Scanner(System.in);
+  private boolean trogdorDefeated;
   private boolean playing = true;
 
   public Game() {
@@ -82,6 +84,18 @@ public class Game {
   }
 
   private void doRoomSpecificActions() {
+    if (player.getLocation() == secretRoom && !trogdorDefeated) {
+      TrogdorBoss boss = new TrogdorBoss(scanner);
+      if (boss.fight()) {
+        trogdorDefeated = true;
+        secretRoom.addItem(new Item("Trogdor trophy", "A singed trophy proving you defeated Trogdor the Burninator."));
+        System.out.println("The way out is clear. The Trogdor trophy is yours!");
+      } else {
+        playing = false;
+      }
+      return;
+    }
+
     if (player.getLocation() == missionRoad && Math.random() < 0.1) {
       System.out.println();
       System.out.println("Careful! A speeding car almost hit you!");
@@ -113,7 +127,6 @@ public class Game {
   }
 
   public void play() {
-    Scanner scanner = new Scanner(System.in);
     System.out.println("Welcome to ELCO ADVENTURE!");
     System.out.println("------- -- ---- ----------");
     System.out.println();
@@ -128,9 +141,16 @@ public class Game {
       }
 
       doRoomSpecificActions();
+      if (!playing) {
+        break;
+      }
       doNPCActions();
 
       System.out.print("> ");
+      if (!scanner.hasNextLine()) {
+        playing = false;
+        break;
+      }
       String input = scanner.nextLine();
       if (input == null || input.trim().isEmpty()) {
         continue;
