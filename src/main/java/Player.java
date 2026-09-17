@@ -1,11 +1,13 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Player {
   private Room location;
-  private ArrayList<Item> inventory = new ArrayList<Item>();
+  private final List<Item> inventory = new ArrayList<>();
 
   public Player(Room initialLocation) {
-    location = initialLocation;
+    this.location = initialLocation;
   }
 
   public void lookAround() {
@@ -13,75 +15,77 @@ public class Player {
   }
 
   public void addItemToInventory(String itemName) {
+    if (itemName == null || itemName.trim().isEmpty()) {
+      System.out.println("Please specify an item name.");
+      return;
+    }
+
     if (getItemByName(itemName) != null) {
       System.out.println("Item is already in inventory");
-    } else if (location.getItemByName(itemName) == null) {
-      System.out.println("Item does not exist or is not in the current room.");
-    } else {
-      inventory.add(location.getItemByName(itemName));
-      location.removeItem(location.getItemByName(itemName));
-      System.out.println("Item picked up.");
+      return;
     }
-    
+
+    Item roomItem = location.getItemByName(itemName);
+    if (roomItem == null) {
+      System.out.println("Item does not exist or is not in the current room.");
+      return;
+    }
+
+    inventory.add(roomItem);
+    location.removeItem(roomItem);
+    System.out.println("Item picked up.");
   }
 
   public void dropItemFromInventory(String itemName) {
-    boolean found = false;
+    if (itemName == null || itemName.trim().isEmpty()) {
+      System.out.println("Please specify an item name.");
+      return;
+    }
+
     for (int i = 0; i < inventory.size(); i++) {
-      if (inventory.get(i).getName().equals(itemName)) {
-        found = true;
-        location.addItem(inventory.get(i));
-        inventory.remove(i);
+      if (inventory.get(i).getName().equalsIgnoreCase(itemName)) {
+        Item dropped = inventory.remove(i);
+        location.addItem(dropped);
+        System.out.println("Item dropped.");
+        return;
       }
     }
-    System.out.println(found? "Item dropped." : "Item is not in inventory.");
-    
+
+    System.out.println("Item is not in inventory.");
   }
 
   public void listInventory() {
-    ArrayList<String> temp = new ArrayList<String>();
-    for (Item i : inventory) {
-      temp.add(i.getName());
-    }
- 
-    for (int i = 0; i < temp.size() - 1; i++){
-
-      int min = i;
-      for (int j = i+1; j < temp.size(); j++) {
-        if (temp.get(j).compareTo(temp.get(min)) < 0) {
-          min = j;
-        }
-      }
-      
-      String tempp = temp.get(min);
-      temp.set(min, temp.get(i));
-      temp.set(i, tempp);
-    }
-
-
-    
-
-    System.out.println(temp);
-  }
-
-  @Deprecated
-  class Sorter implements Comparator<Item> {
-    public int compare(Item a, Item b) {
-      return a.getName().compareTo(b.getName());
-    }
-  }
-
-  public void examine (String itemName) {
-    if (location.getItemByName(itemName) != null) {
-      System.out.println(location.getItemByName(itemName).getDescription());
+    if (inventory.isEmpty()) {
+      System.out.println("Your inventory is empty.");
       return;
     }
-    
-    if (getItemByName(itemName) != null) {
-      System.out.println(getItemByName(itemName).getDescription());
+
+    List<String> itemNames = new ArrayList<>();
+    for (Item item : inventory) {
+      itemNames.add(item.getName());
+    }
+    Collections.sort(itemNames);
+    System.out.println(itemNames);
+  }
+
+  public void examine(String itemName) {
+    if (itemName == null || itemName.trim().isEmpty()) {
+      System.out.println("Please specify an item name.");
       return;
     }
-    
+
+    Item itemInRoom = location.getItemByName(itemName);
+    if (itemInRoom != null) {
+      System.out.println(itemInRoom.getDescription());
+      return;
+    }
+
+    Item itemInInventory = getItemByName(itemName);
+    if (itemInInventory != null) {
+      System.out.println(itemInInventory.getDescription());
+      return;
+    }
+
     System.out.println("Item not found in inventory or room.");
   }
 
@@ -103,6 +107,11 @@ public class Player {
     return null;
   }
 
-  public Room getLocation() { return location; }
-  public void setLocation(Room location) { this.location = location; }
+  public Room getLocation() {
+    return location;
+  }
+
+  public void setLocation(Room location) {
+    this.location = location;
+  }
 }
